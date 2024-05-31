@@ -1,2 +1,2 @@
 # yaMom
-ya mam
+ya mom
