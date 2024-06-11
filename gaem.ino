@@ -5,6 +5,7 @@ AsyncDelay delay_2s;
 AsyncDelay delay_1_5s;
 AsyncDelay delay_1s;
 AsyncDelay delay_0_5s;
+AsyncDelay delay_0_25s;
 AsyncDelay missileDelay;
 
 int randSelect = 0;
@@ -21,36 +22,37 @@ int alien2 = -1;
 int missile1 = -2;
 int missile2 = -2;
 int score = 0;
+int aliensDestroyed = 0;
 
 float midi[127];
 int A_four = 440;
 
 int song[25][2] = {
-    {36+12, 200},
-    {36+12, 100},
-    {41+12, 400},
-    {36+12, 100},
-    {41+12, 100},
-    {45+12, 100},
-    {48+12, 100},
-    {45+12, 200},
-    {41+12, 100},
-    {43+12, 200},
-    {43+12, 300},
-    {38+12, 300},
-    {43+12, 100},
-    {41+12, 200},
-    {40+12, 100},
-    {41+12, 400},
-    {36+12, 100},
-    {41+12, 100},
-    {45+12, 100},
-    {48+12, 100},
-    {45+12, 200},
-    {41+12, 100},
-    {42+12, 200},
-    {42+12, 300},
-    {41+12, 1000},
+    {36+24, 200},
+    {36+24, 100},
+    {41+24, 400},
+    {36+24, 100},
+    {41+24, 100},
+    {45+24, 100},
+    {48+24, 100},
+    {45+24, 200},
+    {41+24, 100},
+    {43+24, 200},
+    {43+24, 300},
+    {38+24, 300},
+    {43+24, 100},
+    {41+24, 200},
+    {40+24, 100},
+    {41+24, 400},
+    {36+24, 100},
+    {41+24, 100},
+    {45+24, 100},
+    {48+24, 100},
+    {45+24, 200},
+    {41+24, 100},
+    {42+24, 200},
+    {42+24, 300},
+    {41+24, 1000},
   };
 
 void setup() {
@@ -60,17 +62,18 @@ void setup() {
   CircuitPlayground.begin();
   generateMIDI();
   
-  delay_2s.start(500, AsyncDelay::MILLIS);
+  delay_2s.start(2000, AsyncDelay::MILLIS);
   delay_1_5s.start(1500, AsyncDelay::MILLIS);
   delay_1s.start(1000, AsyncDelay::MILLIS);
   delay_0_5s.start(500, AsyncDelay::MILLIS);
+  delay_0_25s.start(250, AsyncDelay::MILLIS);
   missileDelay.start(100, AsyncDelay::MILLIS);
 
   attachInterrupt(digitalPinToInterrupt(7), switchInterrupt, CHANGE);
   attachInterrupt(digitalPinToInterrupt(4), rightButtonInterrupt, CHANGE);
   attachInterrupt(digitalPinToInterrupt(5), leftButtonInterrupt, CHANGE);
 
-  //playXevious();
+  playXevious();
 
 }
 
@@ -78,7 +81,6 @@ void generateMIDI() {
   for (int x = 0; x < 127; ++x)
   {
     midi[x] = (A_four / 32.0) * pow(2.0, ((x - 9.0) / 12.0));
-    Serial.println(midi[x]);
   }
 }
 
@@ -128,43 +130,33 @@ void endGame(){
   }
 }
 
-void restartTimer(){
-  if(phase == 0){
-    delay_2s.restart();
-  }else if(phase == 1){
-    delay_1_5s.restart();
-  }else if(phase == 2){
-    delay_1s.restart();
-  }else if(phase == 3){
-    delay_0_5s.restart();
-  }
-}
-
 void moveAliens(){
-  if(alien1 != -1 && alien1 < 4 && missile1 != alien1){
+  if(alien1 != -1 && alien1 < 4 && missile1 != alien1 && gameOver == false && alien1 != (missile1 - 1)){
     alien1++;
     CircuitPlayground.setPixelColor(alien1, 0, 255, 0); 
   }else if(alien1 == 4){
     endGame();
-  }else if(missile1 == alien1){
+  }else if(missile1 == alien1 || alien1 == (missile1 - 1)){
     missile1 = -2;
     alien1 = -1;
     CircuitPlayground.setPixelColor(missile1, 0, 0, 0); 
     CircuitPlayground.setPixelColor(alien1, 255, 0, 0); 
-    score++;
+    score = score + 5;
+    aliensDestroyed++;
   }
   
-  if(alien2 != -1 && alien2 > 5 && missile2 != alien2){
+  if(alien2 != -1 && alien2 > 5 && missile2 != alien2 && gameOver == false && alien2 != (missile2 + 1)){
     alien2--;
     CircuitPlayground.setPixelColor(alien2, 0, 255, 0); 
   }else if(alien2 == 5){
     endGame();
-  }else if(missile2 == alien2){
+  }else if(missile2 == alien2 || alien2 == (missile2 + 1)){
     missile2 = -2;
     alien2 = -1;
     CircuitPlayground.setPixelColor(missile2, 0, 0, 0); 
     CircuitPlayground.setPixelColor(alien2, 255, 0, 0); 
-    score++;
+    score = score + 5;
+    aliensDestroyed++;
   }
 
 }
@@ -182,7 +174,7 @@ void moveMissiles(){
     CircuitPlayground.setPixelColor(missile1, 0, 0, 0); 
     missile1--;
     CircuitPlayground.setPixelColor(missile1, 255, 255, 255); 
-  }else if(missile1 == 0){
+  }else if(missile1 == 0 && missile1 != alien1){
     CircuitPlayground.setPixelColor(missile1, 0, 0, 0); 
     missile1 = -2;
   }else if(missile1 == alien1){
@@ -190,14 +182,15 @@ void moveMissiles(){
     alien1 = -1;
     CircuitPlayground.setPixelColor(missile1, 0, 0, 0); 
     CircuitPlayground.setPixelColor(alien1, 0, 0, 0); 
-    score++;
+    score = score + 5;
+    aliensDestroyed++;
   }
 
   if(missile2 != -2 && missile2 < 9 && missile2 != alien2){
     CircuitPlayground.setPixelColor(missile2, 0, 0, 0); 
     missile2++;
     CircuitPlayground.setPixelColor(missile2, 255, 255, 255); 
-  }else if(missile2 == 9){
+  }else if(missile2 == 9 && missile2 != alien2){
     CircuitPlayground.setPixelColor(missile2, 0, 0, 0); 
     missile2 = -2;
   }else if(missile2 == alien2){
@@ -205,7 +198,8 @@ void moveMissiles(){
     alien2 = -1;
     CircuitPlayground.setPixelColor(missile2, 0, 0, 0); 
     CircuitPlayground.setPixelColor(alien2, 0, 0, 0); 
-    score++;
+    score = score + 5;
+    aliensDestroyed++;
   }
 
 }
@@ -232,13 +226,52 @@ void loop() {
         delay_2s.restart();
         delay(25);
         digitalWrite(LED_BUILTIN, LOW);  
+        score++;
       }
     }else if(phase == 1){
-      
+      if(delay_1_5s.isExpired()){
+        CircuitPlayground.clearPixels();
+        digitalWrite(LED_BUILTIN, HIGH);  
+        moveAliens();
+        spawnAlien();
+        delay_1_5s.restart();
+        delay(25);
+        digitalWrite(LED_BUILTIN, LOW);  
+        score++;
+      }  
     }else if(phase == 2){
-      
+      if(delay_1s.isExpired()){
+        CircuitPlayground.clearPixels();
+        digitalWrite(LED_BUILTIN, HIGH);  
+        moveAliens();
+        spawnAlien();
+        delay_1s.restart();
+        delay(25);
+        digitalWrite(LED_BUILTIN, LOW);  
+        score++;
+      }    
     }else if(phase == 3){
-      
+      if(delay_0_5s.isExpired()){
+        CircuitPlayground.clearPixels();
+        digitalWrite(LED_BUILTIN, HIGH);  
+        moveAliens();
+        spawnAlien();
+        delay_0_5s.restart();
+        delay(25);
+        digitalWrite(LED_BUILTIN, LOW);  
+        score++;
+      }
+    }else if(phase == 4){
+      if(delay_0_25s.isExpired()){
+        CircuitPlayground.clearPixels();
+        digitalWrite(LED_BUILTIN, HIGH);  
+        moveAliens();
+        spawnAlien();
+        delay_0_25s.restart();
+        delay(25);
+        digitalWrite(LED_BUILTIN, LOW);  
+        score++;
+      }
     }
     
     if(switchFlag == true){
@@ -274,7 +307,11 @@ void loop() {
       //Serial.println(missile1);
       //Serial.println(missile2);
       Serial.print("Score: ");
-      Serial.println(score);
+      Serial.print(score);
+      Serial.print("  ||  Phase: ");
+      Serial.print(phase);
+      Serial.print("  || Aliens Destroyed: ");
+      Serial.println(aliensDestroyed);
       missileDelay.restart();
     }
 
@@ -294,25 +331,30 @@ void loop() {
       missile1 = -2;
       missile2 = -2;
       score = 0;
+      aliensDestroyed = 0;
     
-      delay_2s.start(500, AsyncDelay::MILLIS);
+      delay_2s.start(2000, AsyncDelay::MILLIS);
       delay_1_5s.start(1500, AsyncDelay::MILLIS);
       delay_1s.start(1000, AsyncDelay::MILLIS);
       delay_0_5s.start(500, AsyncDelay::MILLIS);
+      delay_0_25s.start(250, AsyncDelay::MILLIS);
       missileDelay.start(100, AsyncDelay::MILLIS);
       gameOver = false;
     }
   }
 
 
-
-
-
-
-
-
-
-
+  if(score < 25){
+    phase = 0;
+  }else if(score >= 25 && phase == 0){
+    phase = 1;
+  }else if(score >= 75 && phase == 1){
+    phase = 2;
+  }else if(score >= 150 && phase == 2){
+    phase = 3;
+  }else if(score >= 300 && phase == 3){
+    phase = 4;
+  }
 
 
 }
