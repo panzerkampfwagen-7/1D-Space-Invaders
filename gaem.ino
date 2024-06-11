@@ -131,12 +131,12 @@ void endGame(){
 }
 
 void moveAliens(){
-  if(alien1 != -1 && alien1 < 4 && missile1 != alien1 && gameOver == false && alien1 != (missile1 - 1)){
+  if(alien1 != -1 && alien1 < 4 && missile1 != alien1 && gameOver == false){
     alien1++;
     CircuitPlayground.setPixelColor(alien1, 0, 255, 0); 
   }else if(alien1 == 4){
     endGame();
-  }else if(missile1 == alien1 || alien1 == (missile1 - 1)){
+  }else if(missile1 == alien1){
     missile1 = -2;
     alien1 = -1;
     CircuitPlayground.setPixelColor(missile1, 0, 0, 0); 
@@ -145,12 +145,12 @@ void moveAliens(){
     aliensDestroyed++;
   }
   
-  if(alien2 != -1 && alien2 > 5 && missile2 != alien2 && gameOver == false && alien2 != (missile2 + 1)){
+  if(alien2 != -1 && alien2 > 5 && missile2 != alien2 && gameOver == false){
     alien2--;
     CircuitPlayground.setPixelColor(alien2, 0, 255, 0); 
   }else if(alien2 == 5){
     endGame();
-  }else if(missile2 == alien2 || alien2 == (missile2 + 1)){
+  }else if(missile2 == alien2){
     missile2 = -2;
     alien2 = -1;
     CircuitPlayground.setPixelColor(missile2, 0, 0, 0); 
